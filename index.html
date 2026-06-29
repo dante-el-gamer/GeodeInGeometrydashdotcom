@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Geometry Dash</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { overflow: hidden; background: #000; font-family: sans-serif; }
+        canvas { display: block; margin: 0 auto; }
+
+        .mods-btn {
+            position: fixed; top: 12px; right: 12px;
+            z-index: 1100; width: 40px; height: 40px;
+            cursor: pointer; border: none; background: none; padding: 0;
+            transition: transform 0.1s;
+        }
+        .mods-btn:hover { transform: scale(1.1); }
+        .mods-btn img { width: 100%; height: 100%; pointer-events: none; }
+
+        .mods-overlay {
+            display: none;
+            position: fixed; inset: 0; z-index: 2000;
+            align-items: center; justify-content: center;
+            font-family: 'Pusab', sans-serif;
+            letter-spacing: 0.02em;
+            text-shadow: 2px 0 0 #000, -2px 0 0 #000, 0 2px 0 #000, 0 -2px 0 #000,
+                         2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+        }
+        .mods-overlay.active { display: flex; }
+
+        @font-face {
+            font-family: 'Pusab';
+            src: url('font/pusab.woff2') format('woff2');
+            font-display: swap;
+        }
+
+        .mods-overlay-inner {
+            position: relative; z-index: 1;
+            width: 1430px;
+            aspect-ratio: 1430 / 1404;
+            max-width: 95vw;
+            max-height: 95vh;
+            flex-shrink: 0;
+            overflow: hidden;
+            background: url('GeodeAssets/resources/menu/MenuMods.png') center/100% 100% no-repeat;
+        }
+
+        .mods-content {
+            position: absolute; z-index: 1;
+            inset: 16% 6% 7% 6%;
+            display: flex; flex-direction: column;
+        }
+
+        .mods-header {
+            position: absolute; z-index: 2;
+            top: 7%; left: 0; right: 0; height: 0;
+        }
+        .mods-header-left {
+            position: absolute; left: 50%; transform: translateX(-50%);
+            top: 0;
+            white-space: nowrap;
+        }
+        .mods-header-left h2 {
+            color: #d4d0e6; font-size: 44px; font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .mods-close {
+            position: absolute; right: 5%; top: 7%;
+            width: 72px; height: 72px; cursor: pointer;
+            border: none; background: none; padding: 0;
+            opacity: 0.6; transition: opacity 0.12s;
+        }
+        .mods-close:hover { opacity: 1; }
+        .mods-close:hover { transform: scale(1.12); opacity: 1; }
+        .mods-close img { width: 100%; height: 100%; pointer-events: none; }
+
+        .mods-list {
+            flex: 1; min-height: 0; overflow-y: auto; padding: 2px 0;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.06) transparent;
+        }
+        .mods-list::-webkit-scrollbar { width: 3px; }
+        .mods-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+        .mod-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 12px;
+            transition: background 0.12s; min-height: 48px;
+            position: relative;
+        }
+        .mod-item:hover { background: rgba(255,255,255,0.03); }
+
+        .mod-icon {
+            width: 56px; height: 56px; flex-shrink: 0; border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .mod-info { flex: 1; min-width: 0; }
+        .mod-name { color: #d4d0e6; font-size: 17px; font-weight: 400; margin: 0; }
+        .mod-meta { color: rgba(180,170,220,0.45); font-size: 14px; margin: 2px 0; }
+        .mod-meta .mod-developer { color: #e8c56d; }
+        .mod-desc { color: rgba(180,170,220,0.5); font-size: 14px; margin: 3px 0 0; line-height: 1.35; }
+
+        .mod-toggle {
+            width: 40px; height: 40px; flex-shrink: 0; cursor: pointer;
+            border: none; background: none; padding: 0; transition: transform 0.1s;
+        }
+        .mod-toggle:hover { transform: scale(1.12); }
+        .mod-toggle img { width: 100%; height: 100%; pointer-events: none; }
+
+        .mod-detail {
+            position: absolute; z-index: 5; inset: 0;
+            display: none; flex-direction: column;
+            background: rgba(6,5,14,0.97);
+            backdrop-filter: blur(6px);
+        }
+        .mod-detail.open { display: flex; }
+
+        .mod-detail-head {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 18px;
+            background: linear-gradient(180deg, rgba(100,85,150,0.2) 0%, transparent 100%);
+        }
+        .mod-detail-head .icon {
+            width: 48px; height: 48px; border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .mod-detail-head .info { flex: 1; min-width: 0; }
+        .mod-detail-head .info .name { color: #e8e4f0; font-size: 18px; font-weight: 700; margin: 0; }
+        .mod-detail-head .info .by { color: rgba(180,170,220,0.5); font-size: 13px; margin: 2px 0 0; }
+        .mod-detail-head .info .by em { color: #e8c56d; font-style: normal; }
+        .mod-detail-back {
+            width: 30px; height: 30px; cursor: pointer;
+            border: none; background: none; padding: 0; opacity: 0.5;
+            transition: opacity 0.12s; font-size: 20px; color: #aaa;
+        }
+        .mod-detail-back:hover { opacity: 1; }
+
+        .mod-detail-config {
+            width: 32px; height: 32px; cursor: pointer; flex-shrink: 0;
+            border: none; background: none; padding: 0; opacity: 0.5;
+            transition: opacity 0.12s;
+        }
+        .mod-detail-config:hover { opacity: 1; }
+        .mod-detail-config img { width: 100%; height: 100%; }
+
+        .settings-head {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 14px; padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .settings-title { color: #e8e4f0; font-size: 16px; font-weight: 700; }
+        .settings-back {
+            background: none; border: none; color: rgba(180,170,220,0.4);
+            font-size: 14px; cursor: pointer; transition: color 0.12s;
+        }
+        .settings-back:hover { color: rgba(180,170,220,0.8); }
+
+        .setting-row {
+            padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .setting-row:last-child { border-bottom: none; }
+        .setting-row .setting-label {
+            color: rgba(200,190,240,0.75); font-size: 15px; margin-bottom: 6px; display: block;
+        }
+        .setting-row .setting-hint {
+            color: rgba(180,170,220,0.35); font-size: 13px; margin-top: 4px; display: block;
+        }
+        .setting-row input[type="range"] {
+            width: 100%; height: 4px; -webkit-appearance: none; appearance: none;
+            background: rgba(255,255,255,0.12); border-radius: 2px; outline: none;
+            accent-color: #6af; cursor: pointer;
+        }
+        .setting-row input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 14px; height: 14px;
+            background: #6af; border-radius: 50%; cursor: pointer;
+        }
+        .setting-row .range-val {
+            color: #6af; font-size: 14px; font-weight: 700;
+            font-variant-numeric: tabular-nums; min-width: 36px; text-align: right;
+        }
+        .setting-row .range-wrap {
+            display: flex; align-items: center; gap: 10px;
+        }
+        .setting-row .toggle-switch {
+            position: relative; width: 40px; height: 22px; flex-shrink: 0; cursor: pointer;
+        }
+        .setting-row .toggle-switch input { display: none; }
+        .setting-row .toggle-switch .slider {
+            position: absolute; inset: 0; background: rgba(255,255,255,0.12);
+            border-radius: 11px; transition: background 0.15s;
+        }
+        .setting-row .toggle-switch .slider::after {
+            content: ''; position: absolute; top: 3px; left: 3px;
+            width: 16px; height: 16px; background: #666; border-radius: 50%;
+            transition: all 0.15s;
+        }
+        .setting-row .toggle-switch input:checked + .slider { background: #0c6; }
+        .setting-row .toggle-switch input:checked + .slider::after {
+            left: 21px; background: #fff;
+        }
+        .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .toggle-row .setting-label { margin-bottom: 0; }
+
+        .mod-detail-body {
+            flex: 1; overflow-y: auto; padding: 16px 18px;
+        }
+        .mod-detail-body .desc {
+            color: rgba(180,170,220,0.6); font-size: 15px; line-height: 1.5; margin: 0 0 16px;
+        }
+        .mod-detail-body .desc a { color: #6af; text-decoration: none; }
+        .mod-detail-body .desc a:hover { text-decoration: underline; }
+        .mod-detail-body .desc code {
+            background: rgba(255,255,255,0.06); color: #e8c56d; padding: 1px 6px;
+            border-radius: 3px; font-size: 12px;
+        }
+        .mod-detail-body .desc strong { color: rgba(200,190,240,0.85); }
+        .mod-detail-body .meta-row {
+            display: flex; justify-content: space-between;
+            padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .mod-detail-body .meta-row .label { color: rgba(180,170,220,0.35); font-size: 11px; }
+        .mod-detail-body .meta-row .value { color: rgba(180,170,220,0.7); font-size: 11px; text-align: right; }
+
+        .mod-detail-foot {
+            display: flex; align-items: center; justify-content: center;
+            padding: 12px 18px; gap: 10px;
+        }
+        .mod-detail-foot .toggle-btn {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 24px; border: none; border-radius: 6px;
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            transition: background 0.12s;
+        }
+        .mod-detail-foot .toggle-btn img { width: 24px; height: 24px; }
+        .mod-detail-foot .toggle-btn.on  { background: rgba(0,200,100,0.2); color: #0c6; }
+        .mod-detail-foot .toggle-btn.off { background: rgba(255,255,255,0.06); color: rgba(180,170,220,0.5); }
+    </style>
+</head>
+<body>
+
+    <button class="mods-btn" id="mods-btn" onclick="toggleModsOverlay()">
+        <img src="GeodeAssets/resources/menu/GeodeMenuIcon.png" alt="Mods">
+    </button>
+
+    <div class="mods-overlay" id="mods-overlay">
+        <div class="mods-overlay-inner">
+            <div class="mods-header">
+                <div class="mods-header-left">
+                    <h2>Mods</h2>
+                </div>
+                <button class="mods-close" onclick="toggleModsOverlay()">
+                    <img src="GeodeAssets/resources/menu/Close-X.png" alt="Close">
+                </button>
+            </div>
+            <div class="mods-content">
+                <div class="mods-list" id="mods-list"></div>
+            <div class="mod-detail" id="mod-detail">
+                <div class="mod-detail-head">
+                    <button class="mod-detail-back" onclick="if (inSettings) { showInfo(); } else { closeModDetail(); }">←</button>
+                    <img class="icon" id="detail-icon" src="" alt="">
+                    <div class="info">
+                        <p class="name" id="detail-name"></p>
+                        <p class="by" id="detail-by"></p>
+                    </div>
+                    <button class="mod-detail-config" id="detail-config" onclick="toggleSettings()" style="display:none">
+                        <img src="GeodeAssets/resources/menu/config.png" alt="Config">
+                    </button>
+                </div>
+                <div class="mod-detail-body">
+                    <div id="detail-info">
+                        <p class="desc" id="detail-desc"></p>
+                        <div id="detail-meta"></div>
+                    </div>
+                    <div id="detail-settings" style="display:none">
+                        <div class="settings-head">
+                            <span class="settings-title">Settings</span>
+                            <button class="settings-back" onclick="showInfo()">← Info</button>
+                        </div>
+                        <div id="settings-fields"></div>
+                    </div>
+                </div>
+                <div class="mod-detail-foot">
+                    <button class="toggle-btn" id="detail-toggle" onclick="toggleMod(currentDetailMod)">
+                        <img src="" alt="">
+                        <span></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    var origOpen = window.open;
+    window.open = function(url, target, features) {
+        if (url && url.indexOf('steampowered.com') !== -1) {
+            toggleModsOverlay();
+            return null;
+        }
+        if (url && (url.indexOf('play.google.com') !== -1 || url.indexOf('apps.apple.com') !== -1)) {
+            return null;
+        }
+        return origOpen.call(window, url, target, features);
+    };
+
+    // ── FPS limiter infrastructure ──────────────────────────
+    var __fpsLimit = (function() {
+        var origRaf = window.requestAnimationFrame;
+        var origCaf = window.cancelAnimationFrame;
+        var target = 60, active = false;
+        var queue = [], timerId = null, lastFlush = 0;
+
+        function flush(rafTime) {
+            timerId = null;
+            lastFlush = rafTime || performance.now();
+            var batch = queue.slice();
+            queue = [];
+            for (var i = 0; i < batch.length; i++) batch[i](lastFlush);
+            if (queue.length) schedule();
+        }
+
+        function schedule() {
+            if (timerId) return;
+            var diff = lastFlush ? performance.now() - lastFlush : 0;
+            var remain = Math.max(1, (1000 / target) - diff);
+            timerId = (remain <= 1 || !active)
+                ? origRaf.call(window, flush)
+                : setTimeout(flush, remain);
+        }
+
+        function throttled(cb) {
+            queue.push(cb);
+            if (!timerId) schedule();
+            return timerId || 0;
+        }
+
+        function cancel() {
+            if (timerId) {
+                (typeof timerId === 'number' ? clearTimeout : origCaf)(timerId);
+                timerId = null;
+            }
+        }
+
+        return {
+            enable: function() {
+                if (active) return;
+                active = true;
+                queue = []; timerId = null; lastFlush = 0;
+                window.requestAnimationFrame = throttled;
+                window.cancelAnimationFrame = cancel;
+            },
+            disable: function() {
+                active = false;
+                cancel();
+                window.requestAnimationFrame = origRaf;
+                window.cancelAnimationFrame = origCaf;
+            },
+            setTarget: function(v) { target = Math.max(1, Math.min(999, v)); },
+            isActive: function() { return active; }
+        };
+    })();
+    // ──────────────────────────────────────────────────────────
+
+    var params = new URLSearchParams(location.search);
+    var levelId = Number(params.get('id')) || -1;
+    var levelString = params.get('string');
+    var songID = Number(params.get('songID')) || 500476;
+
+    async function start() {
+        await navigator.serviceWorker.register('worker.js');
+        await navigator.serviceWorker.ready;
+
+        if (levelString) {
+            navigator.serviceWorker.controller?.postMessage({ levelString, songID });
+        } else {
+            navigator.serviceWorker.controller?.postMessage({ levelId });
+        }
+
+        var script = document.createElement('script');
+        script.type = 'module';
+        script.src = 'assets/index-game.js';
+        document.body.appendChild(script);
+    }
+
+    function updateLevelName() {
+        if (levelString) { window.levelName = 'Local Level'; return; }
+        var official = [
+            'Stereo Madness','Back on Track','Polargeist','Dry Out',
+            'Base After Base','Cant Let Go','Jumper','Time Machine',
+            'Cycles','xStep','Clutterfunk','Theory of Everything',
+            'Electroman Adventures','Clubstep','Electrodynamix',
+            'Hexagon Force','Blast Processing','Theory of Everything 2',
+            'Geometrical Dominator','Deadlocked','Fingerdash','Dash',
+            'Every End','Ultiate Destruction'
+        ];
+        if (levelId < 0) {
+            var idx = Math.abs(levelId) - 1;
+            window.levelName = official[idx] || 'Unknown';
+        }
+    }
+
+    start();
+    setTimeout(updateLevelName, 1000);
+
+    let fix = false;
+    navigator.serviceWorker.addEventListener('message', function(event) {
+        if (event.data.type === 'invalid-id') {
+            if (fix) return; fix = true;
+            alert("Level doesn't exist... are you sure you typed the ID correctly?");
+            window.location.href = window.location.pathname;
+        }
+        if (event.data.type === 'rate-limit') {
+            if (fix) return; fix = true;
+            alert("Site is currently being rate limited from GD servers, please try again later!");
+            window.location.href = window.location.pathname;
+        }
+        if (event.data.type === 'set-level-name') {
+            window.levelName = event.data.name;
+        }
+    });
+
+    new ResizeObserver(function() {
+        window.dispatchEvent(new Event('resize'));
+    }).observe(document.documentElement);
+
+    var mods = [];
+    var activeMods = {};
+    var currentDetailMod = null;
+    var modSettingsValues = {};
+    var modSettingsSchemas = {};
+
+    async function loadMods() {
+        var list = await fetch('mods/mod-list.json').then(function(r) { return r.json(); });
+        for (var i = 0; i < list.length; i++) {
+            var id = list[i];
+            try {
+                var text = await fetch('mods/' + id + '/Mod.js').then(function(r) { return r.text(); });
+                var getConfig = new Function(text + '\nreturn modConfig;');
+                var config = getConfig();
+                mods.push({ id: id, config: config });
+            } catch(e) {
+                console.warn('Failed to load mod:', id, e);
+            }
+        }
+        renderMods();
+    }
+
+    function renderMods() {
+        var container = document.getElementById('mods-list');
+        if (!container) return;
+        container.innerHTML = '';
+        document.getElementById('mods-count') && (document.getElementById('mods-count').textContent = mods.length + ' INSTALLED');
+
+        for (var i = 0; i < mods.length; i++) {
+            var mod = mods[i];
+            var row = document.createElement('div');
+            row.className = 'mod-item';
+
+            var isOn = !!activeMods[mod.id];
+
+            row.innerHTML =
+                '<img class="mod-icon" src="mods/' + mod.id + '/icon.png" alt="" onerror="this.src=\'GeodeAssets/resources/GE_square0' + ((mods.indexOf(mod) % 3) + 1) + '-uhd.png\'">' +
+                '<div class="mod-info">' +
+                    '<p class="mod-name">' + mod.config.name + '</p>' +
+                    '<p class="mod-meta"><span class="mod-developer">' + mod.config.developer + '</span></p>' +
+                    '<p class="mod-desc">' + mod.config.description + '</p>' +
+                '</div>' +
+                '<button class="mod-toggle" onclick="event.stopPropagation(); toggleMod(\'' + mod.id + '\')">' +
+                    '<img src="GeodeAssets/resources/menu/' + (isOn ? 'select-cube' : 'unselect-cube') + '.png" alt="' + (isOn ? 'ON' : 'OFF') + '">' +
+                '</button>';
+            (function(m) {
+                row.addEventListener('click', function() { openModDetail(m); });
+            })(mod);
+            container.appendChild(row);
+        }
+    }
+
+    function toggleMod(id) {
+        if (activeMods[id]) {
+            if (activeMods[id].cleanup) activeMods[id].cleanup();
+            if (activeMods[id].script && activeMods[id].script.parentNode) {
+                activeMods[id].script.parentNode.removeChild(activeMods[id].script);
+            }
+            delete activeMods[id];
+        } else {
+            var script = document.createElement('script');
+            script.src = 'mods/' + id + '/code.js';
+            script.onload = function() {
+                if (window.__modCleanup) {
+                    activeMods[id] = { script: script, cleanup: window.__modCleanup };
+                    delete window.__modCleanup;
+                } else {
+                    activeMods[id] = { script: script };
+                }
+                renderMods();
+                if (currentDetailMod && currentDetailMod.id === id) renderDetail(currentDetailMod);
+            };
+            document.body.appendChild(script);
+        }
+        renderMods();
+        if (currentDetailMod && currentDetailMod.id === id) renderDetail(currentDetailMod);
+    }
+
+    function openModDetail(mod) {
+        currentDetailMod = mod;
+        renderDetail(mod);
+        document.getElementById('mod-detail').classList.add('open');
+    }
+
+    function closeModDetail() {
+        currentDetailMod = null;
+        inSettings = false;
+        document.getElementById('mod-detail').classList.remove('open');
+    }
+
+    function md(text) {
+        if (!text) return '';
+        return text
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
+            .replace(/`([^`]+)`/g, '<code>$1</code>')
+            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+            .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+            .replace(/\n{2,}/g, '</p><p>')
+            .replace(/\n/g, '<br>')
+            .replace(/^<br>/, '').replace(/<br>$/, '');
+    }
+
+    function renderDetail(mod) {
+        var c = mod.config;
+        var isOn = !!activeMods[mod.id];
+        document.getElementById('detail-icon').src = 'mods/' + mod.id + '/icon.png';
+        document.getElementById('detail-icon').onerror = function() {
+            this.src = 'GeodeAssets/resources/GE_square0' + ((mods.indexOf(mod) % 3) + 1) + '-uhd.png';
+        };
+        document.getElementById('detail-name').textContent = c.name;
+        document.getElementById('detail-by').innerHTML = 'by <em>' + c.developer + '</em>' +
+            (c.PortDeveloper ? ' &middot; port by ' + c.PortDeveloper : '');
+
+        // meta fields
+        var meta = document.getElementById('detail-meta');
+        meta.innerHTML = '';
+        function addMeta(label, val) {
+            if (!val) return;
+            var r = document.createElement('div'); r.className = 'meta-row';
+            r.innerHTML = '<span class="label">' + label + '</span><span class="value">' + val + '</span>';
+            meta.appendChild(r);
+        }
+        addMeta('ID', mod.id);
+        addMeta('Version', c.version);
+        addMeta('Official', c.ItsOfficial ? 'Yes' : 'No');
+
+        document.getElementById('detail-desc').innerHTML = md(c.LongDescription) || md(c.description);
+
+        var btn = document.getElementById('detail-toggle');
+        var img = btn.querySelector('img');
+        var span = btn.querySelector('span');
+        if (isOn) {
+            btn.className = 'toggle-btn on';
+            img.src = 'GeodeAssets/resources/menu/select-cube.png';
+            span.textContent = 'Enabled';
+        } else {
+            btn.className = 'toggle-btn off';
+            img.src = 'GeodeAssets/resources/menu/unselect-cube.png';
+            span.textContent = 'Disabled';
+        }
+
+        // config button
+        var configBtn = document.getElementById('detail-config');
+        if (c.configurable) {
+            configBtn.style.display = '';
+            loadSettings(mod.id);
+        } else {
+            configBtn.style.display = 'none';
+        }
+
+        showInfo();
+    }
+
+    function loadSettings(modId) {
+        if (modSettingsSchemas[modId]) { renderSettings(modId); return; }
+        fetch('mods/' + modId + '/settings.js').then(function(r) {
+            if (!r.ok) throw new Error('no settings');
+            return r.text();
+        }).then(function(text) {
+            var getSchema = new Function(text + '\nreturn modSettings;');
+            modSettingsSchemas[modId] = getSchema();
+            if (!modSettingsValues[modId]) {
+                modSettingsValues[modId] = {};
+                try {
+                    var saved = localStorage.getItem('mod-settings-' + modId);
+                    if (saved) modSettingsValues[modId] = JSON.parse(saved);
+                } catch(e) {}
+                var schema = modSettingsSchemas[modId];
+                for (var i = 0; i < schema.length; i++) {
+                    var f = schema[i];
+                    if (modSettingsValues[modId][f.key] === undefined) {
+                        modSettingsValues[modId][f.key] = f.default;
+                    }
+                }
+            }
+            renderSettings(modId);
+        }).catch(function() {
+            modSettingsSchemas[modId] = [];
+        });
+    }
+
+    function renderSettings(modId) {
+        var schema = modSettingsSchemas[modId];
+        var container = document.getElementById('settings-fields');
+        container.innerHTML = '';
+        if (!schema || !schema.length) {
+            container.innerHTML = '<div style="color:rgba(180,170,220,0.35);font-size:12px;padding:16px 0;text-align:center">No settings available.</div>';
+            return;
+        }
+        var vals = modSettingsValues[modId] || {};
+        for (var i = 0; i < schema.length; i++) {
+            var f = schema[i];
+            var row = document.createElement('div');
+            row.className = 'setting-row';
+            var labelHtml = '<label class="setting-label">' + f.label + '</label>';
+            if (f.type === 'range') {
+                row.innerHTML = labelHtml +
+                    '<div class="range-wrap">' +
+                        '<input type="range" min="' + (f.min||0) + '" max="' + (f.max||100) + '" step="' + (f.step||1) + '" value="' + (vals[f.key] ?? f.default) + '">' +
+                        '<span class="range-val">' + (vals[f.key] ?? f.default) + '</span>' +
+                    '</div>' +
+                    (f.hint ? '<span class="setting-hint">' + f.hint + '</span>' : '');
+                var input = row.querySelector('input');
+                var valSpan = row.querySelector('.range-val');
+                (function(key, inp, span) {
+                    inp.addEventListener('input', function() {
+                        var v = Number(inp.value);
+                        span.textContent = v;
+                        modSettingsValues[modId][key] = v;
+                        saveSettings(modId);
+                        applySettings(modId);
+                    });
+                })(f.key, input, valSpan);
+            } else if (f.type === 'toggle') {
+                row.className += ' toggle-row';
+                var checked = vals[f.key] ?? f.default;
+                row.innerHTML =
+                    '<div>' + labelHtml + (f.hint ? '<span class="setting-hint">' + f.hint + '</span>' : '') + '</div>' +
+                    '<label class="toggle-switch">' +
+                        '<input type="checkbox" ' + (checked ? 'checked' : '') + '>' +
+                        '<span class="slider"></span>' +
+                    '</label>';
+                var input = row.querySelector('input');
+                (function(key, inp) {
+                    inp.addEventListener('change', function() {
+                        modSettingsValues[modId][key] = inp.checked;
+                        saveSettings(modId);
+                        applySettings(modId);
+                    });
+                })(f.key, input);
+            } else if (f.type === 'icon-grid') {
+                row.style.padding = '10px 0 6px';
+                row.innerHTML = labelHtml + (f.hint ? '<span class="setting-hint">' + f.hint + '</span>' : '');
+                var grid = document.createElement('div');
+                grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,48px);gap:6px;margin-top:8px;max-height:200px;overflow-y:auto;padding:4px 2px';
+                var selectedVal = vals[f.key] ?? f.default;
+                for (var gi = 1; gi <= (f.count || 60); gi++) {
+                    var cell = document.createElement('div');
+                    cell.style.cssText = 'width:48px;height:48px;cursor:pointer;border-radius:6px;overflow:hidden;border:2px solid ' + (selectedVal === gi ? '#6af' : 'rgba(255,255,255,0.06)') + ';transition:border-color 0.12s';
+                    cell.innerHTML = '<img src="' + f.iconBase + gi + f.iconExt + '" style="width:100%;height:100%;object-fit:contain" draggable="false">';
+                    (function(key, g) {
+                        cell.addEventListener('click', function() {
+                            modSettingsValues[modId][key] = g;
+                            saveSettings(modId);
+                            applySettings(modId);
+                            // re-render to update border
+                            renderSettings(modId);
+                        });
+                    })(f.key, gi);
+                    grid.appendChild(cell);
+                }
+                row.appendChild(grid);
+            } else if (f.type === 'color') {
+                var val = vals[f.key] ?? f.default;
+                row.style.padding = '10px 0 8px';
+                row.innerHTML = labelHtml +
+                    '<div style="display:flex;align-items:center;gap:10px;margin-top:4px">' +
+                    '<input type="color" value="' + val + '" style="width:40px;height:32px;border:none;background:none;cursor:pointer;padding:0">' +
+                    '<span style="color:rgba(180,170,220,0.5);font-size:12px;font-family:monospace">' + val + '</span>' +
+                    '</div>' +
+                    (f.hint ? '<span class="setting-hint">' + f.hint + '</span>' : '');
+                var colorInput = row.querySelector('input');
+                var colorSpan = row.querySelector('span');
+                (function(key, inp, sp) {
+                    inp.addEventListener('input', function() {
+                        modSettingsValues[modId][key] = inp.value;
+                        sp.textContent = inp.value;
+                        saveSettings(modId);
+                        applySettings(modId);
+                    });
+                })(f.key, colorInput, colorSpan);
+            } else if (f.type === 'select') {
+                var opts = (f.options || []).map(function(o) {
+                    return '<option value="' + o.value + '" ' + ((vals[f.key] ?? f.default) === o.value ? 'selected' : '') + '>' + o.label + '</option>';
+                }).join('');
+                row.innerHTML = labelHtml +
+                    '<select style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#ccc;padding:6px 10px;border-radius:4px;font-size:12px;outline:none">' + opts + '</select>' +
+                    (f.hint ? '<span class="setting-hint">' + f.hint + '</span>' : '');
+                var sel = row.querySelector('select');
+                (function(key, s) {
+                    s.addEventListener('change', function() {
+                        modSettingsValues[modId][key] = s.value;
+                        saveSettings(modId);
+                        applySettings(modId);
+                    });
+                })(f.key, sel);
+            }
+            container.appendChild(row);
+        }
+
+        // ── Live icon preview (MoreIcons) ──
+        if (modId === 'MoreIcons' && vals.cubeIcon) {
+            var prevWrap = document.createElement('div');
+            prevWrap.style.cssText = 'margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);text-align:center';
+            var prevLabel = document.createElement('div');
+            prevLabel.style.cssText = 'color:rgba(200,190,240,0.4);font-size:11px;margin-bottom:8px';
+            prevLabel.textContent = 'Preview';
+            prevWrap.appendChild(prevLabel);
+            var pv = document.createElement('canvas');
+            pv.width = 120; pv.height = 120;
+            pv.style.cssText = 'width:120px;height:120px;image-rendering:pixelated;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.3)';
+            prevWrap.appendChild(pv);
+            container.appendChild(prevWrap);
+
+            function drawPreview() {
+                var icon = modSettingsValues.MoreIcons.cubeIcon || 1;
+                var c1 = modSettingsValues.MoreIcons.color1 || '#ffffff';
+                var c2 = modSettingsValues.MoreIcons.color2 || '#000000';
+                var img = new Image();
+                img.onload = function() {
+                    var off = document.createElement('canvas');
+                    off.width = 61; off.height = 60;
+                    var oc = off.getContext('2d');
+                    oc.drawImage(img, 0, 0, 61, 60);
+                    var isDef = c1.toLowerCase() === '#ffffff' && c2.toLowerCase() === '#000000';
+                    if (!isDef) {
+                        var d = oc.getImageData(0, 0, 61, 60), dd = d.data;
+                        var cr = parseInt(c1.slice(1,3),16), cg = parseInt(c1.slice(3,5),16), cb = parseInt(c1.slice(5,7),16);
+                        var dr = parseInt(c2.slice(1,3),16), dg = parseInt(c2.slice(3,5),16), db = parseInt(c2.slice(5,7),16);
+                        for (var i = 0; i < dd.length; i += 4) {
+                            var rr = dd[i], gg = dd[i+1], bb = dd[i+2];
+                            if (dd[i+3] === 0) continue;
+                            if (rr < 25 && gg < 25 && bb < 25) continue;
+                            var lum = (rr*0.299 + gg*0.587 + bb*0.114) / 255;
+                            var t = Math.min(1, Math.max(0, (lum-0.12)/0.88));
+                            dd[i]   = Math.round(cr * t + dr * (1-t));
+                            dd[i+1] = Math.round(cg * t + dg * (1-t));
+                            dd[i+2] = Math.round(cb * t + db * (1-t));
+                        }
+                        oc.putImageData(d, 0, 0);
+                    }
+                    var ctx = pv.getContext('2d');
+                    ctx.clearRect(0, 0, 120, 120);
+                    ctx.imageSmoothingEnabled = false;
+                    ctx.drawImage(off, 0, 0, 120, 120);
+                };
+                img.src = 'Icons/cube/cube_' + icon + '.png';
+            }
+
+            drawPreview();
+
+            var colorInputs = container.querySelectorAll('input[type="color"]');
+            for (var ci = 0; ci < colorInputs.length; ci++) {
+                colorInputs[ci].addEventListener('input', function() { drawPreview(); });
+            }
+        }
+    }
+
+    function saveSettings(modId) {
+        try {
+            localStorage.setItem('mod-settings-' + modId, JSON.stringify(modSettingsValues[modId]));
+        } catch(e) {}
+    }
+
+    function applySettings(modId) {
+        if (window.__modApplySettings) {
+            window.__modApplySettings(modId, modSettingsValues[modId]);
+        }
+    }
+
+    var inSettings = false;
+
+    function toggleSettings() {
+        if (inSettings) { showInfo(); return; }
+        inSettings = true;
+        document.getElementById('detail-info').style.display = 'none';
+        document.getElementById('detail-settings').style.display = '';
+        document.getElementById('detail-config').style.opacity = '1';
+    }
+
+    function showInfo() {
+        inSettings = false;
+        document.getElementById('detail-info').style.display = '';
+        document.getElementById('detail-settings').style.display = 'none';
+        document.getElementById('detail-config').style.opacity = '0.5';
+    }
+
+    function toggleModsOverlay() {
+        var overlay = document.getElementById('mods-overlay');
+        overlay.classList.toggle('active');
+        if (overlay.classList.contains('active') && mods.length === 0) {
+            loadMods();
+        } else if (overlay.classList.contains('active')) {
+            renderMods();
+        } else {
+            closeModDetail();
+        }
+    }
+
+    loadMods();
+</script>
+</body>
+</html>
