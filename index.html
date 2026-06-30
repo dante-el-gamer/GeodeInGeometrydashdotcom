@@ -47,6 +47,79 @@
             background: url('GeodeAssets/resources/menu/MenuMods.png') center/100% 100% no-repeat;
         }
 
+        .req-overlay-inner {
+            position: relative; z-index: 1;
+            width: 1349px;
+            aspect-ratio: 1349 / 1068;
+            max-width: 90vw;
+            max-height: 90vh;
+            flex-shrink: 0;
+            overflow: hidden;
+            background: url('GeodeAssets/resources/menu/requirements.png') center/100% 100% no-repeat;
+        }
+        .req-content {
+            position: absolute; z-index: 1;
+            inset: 15% 8% 16% 8%;
+            text-align: center;
+            display: flex; flex-direction: column;
+        }
+        .req-icon {
+            width: 110px; height: 110px; border-radius: 10px; flex-shrink: 0;
+        }
+        .req-info { margin: 0; }
+        .req-name { color: #d4d0e6; font-size: 34px; font-weight: 700; margin: 0; }
+        .req-by { color: rgba(180,170,220,0.45); font-size: 22px; margin: 6px 0; }
+        .req-desc { color: rgba(180,170,220,0.5); font-size: 20px; margin: 8px 0 0; line-height: 1.4; }
+        .req-buttons {
+            margin-top: auto;
+            display: flex; gap: 20px; justify-content: center;
+        }
+        .req-buttons img { cursor: pointer; height: 48px; transition: transform 0.1s; }
+        .req-buttons img:hover { transform: scale(1.08); }
+
+        .mi-overlay-inner {
+            position: relative; z-index: 1;
+            width: 1349px;
+            aspect-ratio: 1349 / 1068;
+            max-width: 90vw;
+            max-height: 90vh;
+            flex-shrink: 0;
+            overflow: hidden;
+            background: url('GeodeAssets/resources/menu/requirements.png') center/100% 100% no-repeat;
+        }
+        .mi-overlay-inner .mi-content {
+            position: absolute; z-index: 1;
+            inset: 10% 8% 13% 8%;
+            display: flex; flex-direction: column;
+        }
+        .mi-overlay-inner .mi-content .mi-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+        }
+        .mi-overlay-inner .mi-content .mi-header span {
+            color: #d4d0e6; font-size: 24px; font-weight: 700;
+        }
+        .mi-overlay-inner .mi-content .mi-header .mi-close {
+            color: rgba(180,170,220,0.5); font-size: 28px; cursor: pointer; line-height: 1; background: none; border: none; font-family: 'Pusab', sans-serif;
+        }
+        .mi-overlay-inner .mi-content .mi-header .mi-close:hover { color: rgba(180,170,220,0.9); }
+        .mi-overlay-inner .mi-content .mi-grid {
+            flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; align-content: start; scrollbar-width: thin; scrollbar-color: rgba(180,170,220,0.3) transparent;
+        }
+        .mi-overlay-inner .mi-content .mi-footer {
+            display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 8px;
+        }
+        .mi-overlay-inner .mi-content .mi-footer .mi-nav {
+            color: rgba(180,170,220,0.6); font-size: 20px; cursor: pointer; line-height: 1; background: none; border: none; font-family: 'Pusab', sans-serif;
+        }
+        .mi-overlay-inner .mi-content .mi-footer .mi-nav:hover { color: rgba(180,170,220,0.9); }
+        .mi-overlay-inner .mi-content .mi-footer .mi-nav:disabled { opacity: 0.3; cursor: default; }
+        .mi-ci {
+            width: 52px; height: 52px; border-radius: 4px; cursor: pointer; overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.04); transition: border-color 0.1s;
+        }
+        .mi-ci:hover { border-color: rgba(212,208,230,0.4); }
+        .mi-ci img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+
         .mods-content {
             position: absolute; z-index: 1;
             inset: 16% 6% 7% 6%;
@@ -290,6 +363,21 @@
                 </div>
             </div>
         </div>
+        <div class="mods-overlay" id="req-overlay" style="display:none;position:fixed;inset:0;z-index:2100;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;font-family:'Pusab',sans-serif;letter-spacing:0.02em;text-shadow:2px 0 0 #000,-2px 0 0 #000,0 2px 0 #000,0 -2px 0 #000,2px 2px 0 #000,-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000">
+            <div class="req-overlay-inner">
+                <div class="req-content">
+                    <div style="display:flex;align-items:center;gap:16px;justify-content:center;flex:1">
+                        <img class="req-icon" id="req-icon" src="" alt="">
+                        <div class="req-info">
+                            <p class="req-name" id="req-name"></p>
+                            <p class="req-by" id="req-by"></p>
+                            <p class="req-desc" id="req-desc"></p>
+                        </div>
+                    </div>
+                    <div class="req-buttons" id="req-buttons"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
 <script>
@@ -331,6 +419,7 @@
         }
 
         function throttled(cb) {
+            if (!active) return origRaf.call(window, cb);
             queue.push(cb);
             if (!timerId) schedule();
             return timerId || 0;
@@ -354,7 +443,6 @@
             disable: function() {
                 active = false;
                 cancel();
-                window.requestAnimationFrame = origRaf;
                 window.cancelAnimationFrame = origCaf;
             },
             setTarget: function(v) { target = Math.max(1, Math.min(999, v)); },
@@ -431,6 +519,28 @@
     var modSettingsValues = {};
     var modSettingsSchemas = {};
 
+    var GD_COLORS = [
+        [125,255,0],[0,255,0],[0,255,125],[0,255,255],[0,125,255],[0,0,255],
+        [125,0,255],[255,0,255],[255,0,125],[255,0,0],[255,125,0],[255,255,0],
+        [255,255,255],[185,0,255],[255,185,0],[0,0,0],[0,200,255],[175,175,175],
+        [90,90,90],[255,125,125],[0,175,75],[0,125,125],[0,75,175],[75,0,175],
+        [125,0,125],[175,0,75],[175,75,0],[125,125,0],[75,175,0],[255,75,0],
+        [150,50,0],[150,100,0],[100,150,0],[0,150,100],[0,100,150],[100,0,150],
+        [150,0,100],[150,0,0],[0,150,0],[0,0,150],[125,255,175],[125,125,255],
+        [255,250,127],[250,127,255],[0,255,192],[80,50,14],[205,165,118],
+        [182,128,255],[255,58,58],[77,77,143],[0,10,76],[253,212,206],
+        [190,181,255],[112,0,0],[82,2,0],[56,1,6],[128,79,79],[122,53,53],
+        [81,36,36],[163,98,70],[117,73,54],[86,53,40],[255,185,114],
+        [255,160,64],[102,49,30],[91,39,0],[71,32,0],[167,123,77],[109,83,57],
+        [81,62,42],[255,255,192],[253,224,160],[192,255,160],[177,255,109],
+        [192,255,224],[148,255,228],[67,161,138],[49,109,95],[38,84,73],
+        [0,96,0],[0,64,0],[0,96,96],[0,64,64],[160,255,255],[1,7,112],
+        [0,73,109],[0,50,76],[0,38,56],[80,128,173],[51,83,117],[35,60,86],
+        [224,224,224],[61,6,140],[55,8,96],[64,64,64],[111,73,164],[84,54,127],
+        [66,42,99],[252,181,255],[175,87,175],[130,67,130],[94,49,94],
+        [128,128,128],[102,3,62],[71,1,52],[210,255,50],[118,189,255]
+    ];
+
     async function loadMods() {
         var list = await fetch('mods/mod-list.json').then(function(r) { return r.json(); });
         for (var i = 0; i < list.length; i++) {
@@ -439,12 +549,23 @@
                 var text = await fetch('mods/' + id + '/Mod.js').then(function(r) { return r.text(); });
                 var getConfig = new Function(text + '\nreturn modConfig;');
                 var config = getConfig();
-                mods.push({ id: id, config: config });
+                var mod = { id: id, config: config, needs: [] };
+                try {
+                    var needText = await fetch('mods/' + id + '/need.js').then(function(r) { return r.text(); });
+                    var getNeeds = new Function(needText + '\nreturn needs;');
+                    mod.needs = getNeeds() || [];
+                } catch(e) {}
+                mods.push(mod);
             } catch(e) {
                 console.warn('Failed to load mod:', id, e);
             }
         }
         renderMods();
+        for (var mi = 0; mi < mods.length; mi++) {
+            if (mods[mi].config.defaultEnabled && !activeMods[mods[mi].id]) {
+                enableMod(mods[mi].id);
+            }
+        }
     }
 
     function renderMods() {
@@ -477,28 +598,92 @@
         }
     }
 
+    var pendingModId = null;
+    var pendingNeededId = null;
+
+    function showReqOverlay(neededMod, forModId) {
+        pendingModId = forModId;
+        pendingNeededId = neededMod.id;
+        var c = neededMod.config;
+        var isBlockingDisable = !!activeMods[forModId];
+        document.getElementById('req-icon').src = 'mods/' + neededMod.id + '/icon.png';
+        document.getElementById('req-icon').onerror = function() {
+            this.src = 'GeodeAssets/resources/GE_square0' + ((mods.indexOf(neededMod) % 3) + 1) + '-uhd.png';
+        };
+        document.getElementById('req-name').textContent = isBlockingDisable ? 'Required by ' + c.name : c.name;
+        document.getElementById('req-by').innerHTML = 'by ' + (c.developer || '?');
+        document.getElementById('req-desc').textContent = c.description || '';
+        var btns = document.getElementById('req-buttons');
+        if (isBlockingDisable) {
+            btns.innerHTML = '<img src="GeodeAssets/resources/menu/Close-X.png" id="req-close-btn">';
+            document.getElementById('req-close-btn').onclick = hideReqOverlay;
+        } else {
+            btns.innerHTML =
+                '<img id="req-enable-btn" src="GeodeAssets/resources/menu/EnableRequiredMod.png">' +
+                '<img id="req-cancel-btn" src="GeodeAssets/resources/menu/DoNotUseRquired Mod.png">';
+            document.getElementById('req-enable-btn').addEventListener('click', function() {
+                if (pendingNeededId) enableMod(pendingNeededId);
+                if (pendingModId) enableMod(pendingModId);
+                hideReqOverlay();
+            });
+            document.getElementById('req-cancel-btn').addEventListener('click', hideReqOverlay);
+        }
+        document.getElementById('req-overlay').style.display = 'flex';
+    }
+
+    function hideReqOverlay() {
+        document.getElementById('req-overlay').style.display = 'none';
+        pendingModId = null;
+        pendingNeededId = null;
+    }
+
     function toggleMod(id) {
+        var mod = mods.find(function(m) { return m.id === id; });
+        if (!mod) return;
+
         if (activeMods[id]) {
+            var dependents = mods.filter(function(m) {
+                return m.needs && m.needs.indexOf(id) !== -1 && activeMods[m.id];
+            });
+            if (dependents.length > 0) {
+                showReqOverlay(dependents[0], id);
+                return;
+            }
             if (activeMods[id].cleanup) activeMods[id].cleanup();
             if (activeMods[id].script && activeMods[id].script.parentNode) {
                 activeMods[id].script.parentNode.removeChild(activeMods[id].script);
             }
             delete activeMods[id];
         } else {
-            var script = document.createElement('script');
-            script.src = 'mods/' + id + '/code.js';
-            script.onload = function() {
-                if (window.__modCleanup) {
-                    activeMods[id] = { script: script, cleanup: window.__modCleanup };
-                    delete window.__modCleanup;
-                } else {
-                    activeMods[id] = { script: script };
+            if (mod.needs) {
+                for (var ni = 0; ni < mod.needs.length; ni++) {
+                    if (!activeMods[mod.needs[ni]]) {
+                        var needed = mods.find(function(m) { return m.id === mod.needs[ni]; });
+                        if (needed) { showReqOverlay(needed, id); return; }
+                    }
                 }
-                renderMods();
-                if (currentDetailMod && currentDetailMod.id === id) renderDetail(currentDetailMod);
-            };
-            document.body.appendChild(script);
+            }
+            enableMod(id);
         }
+        renderMods();
+        if (currentDetailMod && currentDetailMod.id === id) renderDetail(currentDetailMod);
+    }
+
+    function enableMod(id) {
+        var script = document.createElement('script');
+        script.src = 'mods/' + id + '/code.js';
+        var self = id;
+        script.onload = function() {
+            if (window.__modCleanup) {
+                activeMods[self] = { script: script, cleanup: window.__modCleanup };
+                delete window.__modCleanup;
+            } else {
+                activeMods[self] = { script: script };
+            }
+            renderMods();
+            if (currentDetailMod && currentDetailMod.id === self) renderDetail(currentDetailMod);
+        };
+        document.body.appendChild(script);
         renderMods();
         if (currentDetailMod && currentDetailMod.id === id) renderDetail(currentDetailMod);
     }
@@ -552,6 +737,9 @@
         addMeta('ID', mod.id);
         addMeta('Version', c.version);
         addMeta('Official', c.ItsOfficial ? 'Yes' : 'No');
+        if (mod.needs && mod.needs.length) {
+            addMeta('Requires', mod.needs.join(', '));
+        }
 
         document.getElementById('detail-desc').innerHTML = md(c.LongDescription) || md(c.description);
 
@@ -698,6 +886,198 @@
                         applySettings(modId);
                     });
                 })(f.key, colorInput, colorSpan);
+            } else if (f.type === 'gd-color') {
+                var val = vals[f.key] ?? f.default;
+                row.style.padding = '10px 0 8px';
+                var labelEl = document.createElement('label');
+                labelEl.className = 'setting-label';
+                labelEl.textContent = f.label;
+                row.appendChild(labelEl);
+                var pickerRow = document.createElement('div');
+                pickerRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-top:4px';
+                var colorInput = document.createElement('input');
+                colorInput.type = 'color';
+                colorInput.value = val;
+                colorInput.style.cssText = 'width:40px;height:32px;border:none;background:none;cursor:pointer;padding:0';
+                var colorSpan = document.createElement('span');
+                colorSpan.style.cssText = 'color:rgba(180,170,220,0.5);font-size:12px;font-family:monospace';
+                colorSpan.textContent = val;
+                pickerRow.appendChild(colorInput);
+                pickerRow.appendChild(colorSpan);
+                row.appendChild(pickerRow);
+                if (f.hint) {
+                    var ht = document.createElement('span');
+                    ht.className = 'setting-hint';
+                    ht.textContent = f.hint;
+                    row.appendChild(ht);
+                }
+                var toggleBtn = document.createElement('button');
+                toggleBtn.className = 'gd-palette-toggle';
+                toggleBtn.style.cssText = 'background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:rgba(180,170,220,0.6);padding:4px 12px;border-radius:4px;cursor:pointer;font-size:11px;margin-top:8px';
+                toggleBtn.textContent = 'Show GD Palette';
+                row.appendChild(toggleBtn);
+                var wrap = document.createElement('div');
+                wrap.className = 'gd-palette-wrap';
+                wrap.style.cssText = 'display:none;margin-top:8px;padding:6px;background:rgba(0,0,0,0.15);border-radius:6px;max-height:180px;overflow-y:auto';
+                for (var gdi = 0; gdi < GD_COLORS.length; gdi++) {
+                    var gc = GD_COLORS[gdi];
+                    var ghex = '#' + [gc[0],gc[1],gc[2]].map(function(v){return (v|256).toString(16).slice(1)}).join('');
+                    var sw = document.createElement('div');
+                    sw.className = 'gd-swatch';
+                    sw.style.cssText = 'float:left;width:24px;height:24px;margin:3px;border-radius:50%;background:' + ghex + ';cursor:pointer;border:2px solid ' + (val === ghex ? '#6af' : 'rgba(255,255,255,0.08)') + ';transition:border-color 0.1s';
+                    sw.dataset.gdId = gdi;
+                    sw.dataset.hex = ghex;
+                    sw.title = 'GD #' + gdi + ' (' + ghex + ')';
+                    wrap.appendChild(sw);
+                }
+                var clr = document.createElement('div');
+                clr.style.cssText = 'clear:both';
+                wrap.appendChild(clr);
+                row.appendChild(wrap);
+                (function(btn, w) {
+                    btn.addEventListener('click', function() {
+                        var shown = w.style.display !== 'none';
+                        w.style.display = shown ? 'none' : 'block';
+                        btn.textContent = shown ? 'Show GD Palette' : 'Hide GD Palette';
+                    });
+                })(toggleBtn, wrap);
+                (function(key, inp, sp, w) {
+                    inp.addEventListener('input', function() {
+                        modSettingsValues[modId][key] = inp.value;
+                        sp.textContent = inp.value;
+                        saveSettings(modId);
+                        applySettings(modId);
+                        var swatches = w.querySelectorAll('.gd-swatch');
+                        for (var si = 0; si < swatches.length; si++) {
+                            swatches[si].style.borderColor = swatches[si].dataset.hex === inp.value ? '#6af' : 'rgba(255,255,255,0.1)';
+                        }
+                    });
+                })(f.key, colorInput, colorSpan, wrap);
+                var swatches = wrap.querySelectorAll('.gd-swatch');
+                for (var si = 0; si < swatches.length; si++) {
+                    (function(key, sw, inp, sp, w) {
+                        sw.addEventListener('click', function() {
+                            var hex = sw.dataset.hex;
+                            modSettingsValues[modId][key] = hex;
+                            inp.value = hex;
+                            sp.textContent = hex;
+                            saveSettings(modId);
+                            applySettings(modId);
+                            var all = w.querySelectorAll('.gd-swatch');
+                            for (var ssi = 0; ssi < all.length; ssi++) {
+                                all[ssi].style.borderColor = all[ssi].dataset.hex === hex ? '#6af' : 'rgba(255,255,255,0.1)';
+                            }
+                        });
+                    })(f.key, swatches[si], colorInput, colorSpan, wrap);
+                }
+            } else if (f.type === 'profile-import') {
+                row.innerHTML = labelHtml +
+                    '<div style="display:flex;gap:6px;margin-top:4px">' +
+                    '<input type="text" placeholder="' + (f.placeholder || 'GD Username') + '" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#ccc;padding:6px 10px;border-radius:4px;font-size:12px;outline:none">' +
+                    '<button style="background:rgba(100,170,255,0.15);border:1px solid rgba(100,170,255,0.3);color:#6af;padding:6px 14px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600">Import</button>' +
+                    '</div>' +
+                    '<span class="setting-hint" style="color:rgba(180,170,220,0.35);font-size:12px;margin-top:4px;display:block"></span>';
+                var input = row.querySelector('input');
+                var btn = row.querySelector('button');
+                var hint = row.querySelector('.setting-hint');
+                (function(key, inp, bt, ht) {
+                    var preview = document.createElement('div');
+                    preview.style.cssText = 'display:none;margin-top:8px;padding:8px;background:rgba(0,0,0,0.15);border-radius:6px;text-align:center';
+                    row.insertBefore(preview, ht);
+                    bt.addEventListener('click', function() {
+                        var name = inp.value.trim();
+                        if (!name) return;
+                        ht.textContent = 'Fetching...';
+                        preview.style.display = 'none';
+                        bt.disabled = true;
+                        fetch('https://gdbrowser.com/api/profile/' + encodeURIComponent(name))
+                            .then(function(r) { if (!r.ok) throw new Error('API error'); return r.json(); })
+                            .then(function(data) {
+                                var col1Id = data.col1, col2Id = data.col2, glow = data.glow, iconId = data.icon || 1;
+                                var c1 = '#000000', c2 = '#000000';
+                                if (GD_COLORS[col1Id]) { var cr = GD_COLORS[col1Id]; c1 = '#' + [cr[0],cr[1],cr[2]].map(function(v){return (v|256).toString(16).slice(1)}).join(''); }
+                                if (GD_COLORS[col2Id]) { var cr = GD_COLORS[col2Id]; c2 = '#' + [cr[0],cr[1],cr[2]].map(function(v){return (v|256).toString(16).slice(1)}).join(''); }
+                                var targets = f.targets || {};
+                                if (targets.color1 && modSettingsValues[modId][targets.color1] !== undefined) {
+                                    modSettingsValues[modId][targets.color1] = c1;
+                                }
+                                if (targets.color2 && modSettingsValues[modId][targets.color2] !== undefined) {
+                                    modSettingsValues[modId][targets.color2] = c2;
+                                }
+                                if (targets.glow && modSettingsValues[modId][targets.glow] !== undefined) {
+                                    modSettingsValues[modId][targets.glow] = !!glow;
+                                }
+                                if (targets.cubeIcon && modSettingsValues[modId][targets.cubeIcon] !== undefined) {
+                                    modSettingsValues[modId][targets.cubeIcon] = iconId;
+                                }
+                                saveSettings(modId);
+                                applySettings(modId);
+                                renderSettings(modId);
+                                preview.innerHTML = '<img src="https://gdicon.oat.zone/icon.png?type=cube&value=' + iconId + '&color1=' + col1Id + '&color2=' + col2Id + '" style="width:84px;height:84px;image-rendering:pixelated;border-radius:4px;background:rgba(0,0,0,0.2)"><div style="color:#0c6;font-size:12px;margin-top:4px">' + name + '</div>';
+                                preview.style.display = 'block';
+                                ht.textContent = '';
+                            })
+                            .catch(function(err) {
+                                ht.textContent = 'Error: ' + err.message;
+                                ht.style.color = '#f55';
+                            })
+                            .finally(function() { bt.disabled = false; });
+                    });
+                    inp.addEventListener('keydown', function(e) {
+                        e.stopPropagation();
+                        if (e.keyCode === 13) bt.click();
+                    }, true);
+                })(f.key, input, btn, hint);
+            } else if (f.type === 'image-url') {
+                var urlVal = (vals[f.key] ?? f.default) || '';
+                row.style.padding = '10px 0 8px';
+                var labelEl = document.createElement('label');
+                labelEl.className = 'setting-label';
+                labelEl.textContent = f.label;
+                row.appendChild(labelEl);
+                var inputRow = document.createElement('div');
+                inputRow.style.cssText = 'display:flex;gap:6px;margin-top:4px;align-items:center';
+                var urlInput = document.createElement('input');
+                urlInput.type = 'text';
+                urlInput.placeholder = 'https://example.com/icon.png';
+                urlInput.value = urlVal;
+                urlInput.style.cssText = 'flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#ccc;padding:6px 10px;border-radius:4px;font-size:12px;outline:none';
+                var clearBtn = document.createElement('button');
+                clearBtn.textContent = 'Clear';
+                clearBtn.style.cssText = 'background:rgba(255,80,80,0.1);border:1px solid rgba(255,80,80,0.2);color:#f66;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:11px';
+                inputRow.appendChild(urlInput);
+                inputRow.appendChild(clearBtn);
+                row.appendChild(inputRow);
+                var preview = document.createElement('div');
+                preview.style.cssText = 'display:' + (urlVal ? 'block' : 'none') + ';margin-top:8px;text-align:center';
+                row.appendChild(preview);
+                if (f.hint) {
+                    var hintEl = document.createElement('span');
+                    hintEl.className = 'setting-hint';
+                    hintEl.textContent = f.hint;
+                    row.appendChild(hintEl);
+                }
+                (function(key, inp, prv, clr) {
+                    function updatePreview() {
+                        var v = inp.value.trim();
+                        if (v) {
+                            prv.innerHTML = '<img src="' + v.replace(/"/g,'&quot;') + '" style="max-width:120px;max-height:120px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.2)" onerror="this.style.display=\'none\'">';
+                            prv.style.display = 'block';
+                        } else {
+                            prv.innerHTML = '';
+                            prv.style.display = 'none';
+                        }
+                        modSettingsValues[modId][key] = v;
+                        saveSettings(modId);
+                        applySettings(modId);
+                    }
+                    inp.addEventListener('input', updatePreview);
+                    clr.addEventListener('click', function() {
+                        inp.value = '';
+                        updatePreview();
+                    });
+                    if (urlVal) updatePreview();
+                })(f.key, urlInput, preview, clearBtn);
             } else if (f.type === 'select') {
                 var opts = (f.options || []).map(function(o) {
                     return '<option value="' + o.value + '" ' + ((vals[f.key] ?? f.default) === o.value ? 'selected' : '') + '>' + o.label + '</option>';
@@ -785,6 +1165,11 @@
         if (window.__modApplySettings) {
             window.__modApplySettings(modId, modSettingsValues[modId]);
         }
+        if (window.__modOnSettings) {
+            for (var ci = 0; ci < window.__modOnSettings.length; ci++) {
+                window.__modOnSettings[ci](modId, modSettingsValues[modId]);
+            }
+        }
     }
 
     var inSettings = false;
@@ -813,6 +1198,7 @@
             renderMods();
         } else {
             closeModDetail();
+            hideReqOverlay();
         }
     }
 

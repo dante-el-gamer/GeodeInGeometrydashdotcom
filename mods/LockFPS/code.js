@@ -103,12 +103,15 @@
         slider = null;
     };
 
-    window.__modApplySettings = function(modId, settings) {
+    function lfpsOnSettings(modId, settings) {
         if (modId === 'LockFPS') {
             targetFps = settings.defaultFps || 60;
             minFps = settings.minFps || 10;
             maxFps = settings.maxFps || 240;
             rebuildSlider();
         }
-    };
+    }
+    window.__modApplySettings = lfpsOnSettings;
+    if (!window.__modOnSettings) window.__modOnSettings = [];
+    window.__modOnSettings.push(lfpsOnSettings);
 })();

@@ -1,0 +1,3 @@
+gradiente:
+   abajo:   #444444
+   arriba:  #949494
