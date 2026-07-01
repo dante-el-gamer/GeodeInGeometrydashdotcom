@@ -1,5 +1,3 @@
-# Geode In Geometry Dash
-
 ![GeodeInGeometrydashDOTcom](READMEimg/GeodeInGeometrydashDOTcom.png)
 
 **Geometry Dash corriendo en el navegador con soporte de mods inspirado en el [Geode SDK](https://geode-sdk.org/).**
