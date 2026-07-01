@@ -1,5 +1,3 @@
-# Geode In Geometry Dash
-
 [🇪🇸 **Español**](README_es.md)
 
 ![GeodeInGeometrydashDOTcom](READMEimg/GeodeInGeometrydashDOTcom.png)
