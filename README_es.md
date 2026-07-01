@@ -1,47 +1,47 @@
 # Geode In Geometry Dash
 
-[🇪🇸 **Español**](README_es.md)
+[🇬🇧 **English**](README.md)
 
 ![GeodeInGeometrydashDOTcom](READMEimg/GeodeInGeometrydashDOTcom.png)
 
-**Geometry Dash running in the browser with mod support inspired by the [Geode SDK](https://geode-sdk.org/).**
+**Geometry Dash corriendo en el navegador con soporte de mods inspirado en el [Geode SDK](https://geode-sdk.org/).**
 
-A web port of the game that integrates a functional mod system with persistence, custom settings, live icon preview, and more. Built with **Phaser**, served as a static site.
+Un port web del juego que integra un sistema de mods funcional con persistencia, settings custom, preview de iconos en vivo y más. Construido con **Phaser**, servido como sitio estático.
 
 ---
 
 ## ✨ Features
 
-- **24 official levels** included with music
-- **Full mod system**: toggle on/off, configurable settings, dependencies
-- **Mods overlay** with Geode SDK-styled UI
-- **MoreIcons**: 485 cube icons with navigation, GD palette color picker, glow, custom URL icons, GD profile import
-- **FPS Lock**: configurable FPS limiter (10-240)
-- **Click Between Frames**: input capture between frames
-- **MenuMusic**: custom menu music
-- **Online level loading** via Cloudflare Workers + Service Worker
-- **localStorage persistence** (active mods and settings)
+- **24 niveles oficiales** incluidos con música
+- **Sistema de mods completo**: toggle on/off, settings configurables, dependencias
+- **Overlay de mods** con UI estilizada al Geode SDK
+- **MoreIcons**: 485 iconos de cubo navegables, color picker con paleta GD, glow, iconos custom por URL, importación desde perfil real de GD
+- **FPS Lock**: limitador de FPS configurable (10-240)
+- **Click Between Frames**: captura inputs entre frames
+- **MenuMusic**: música personalizada en el menú principal
+- **Carga de niveles online** via Cloudflare Workers + Service Worker
+- **Persistencia en localStorage** (mods activos y settings)
 
 ---
 
-## 🚀 How to Use
+## 🚀 Cómo usar
 
-1. Open [GeodeInGeometrydash.com](https://GeodeInGeometrydash.com)
-2. Click the mods icon (top right)
-3. Toggle the mods you want
-4. Each mod has its own settings panel
+1. Abrí [GeodeInGeometrydash.com](https://GeodeInGeometrydash.com)
+2. Hacé click en el ícono de mods (arriba a la derecha)
+3. Activá los mods que quieras
+4. Cada mod tiene su propio panel de settings
 
-### URL Parameters
+### Parámetros de URL
 
-| Parameter | Description |
+| Parámetro | Descripción |
 |-----------|-------------|
-| `?id=` | Level ID |
-| `?string=` | Level string (custom level) |
-| `?songID=` | Song ID (default: 500476) |
+| `?id=` | ID del nivel |
+| `?string=` | Level string (nivel custom) |
+| `?songID=` | ID de la canción (default: 500476) |
 
 ---
 
-## 🎮 Mods Included
+## 🎮 Mods incluidos
 
 <div align="center">
   <div style="position: relative; display: inline-block; max-width: 100%;">
@@ -50,8 +50,8 @@ A web port of the game that integrates a functional mod system with persistence,
       <table style="width: 100%; border-collapse: collapse; color: #d4d0e6;">
         <tr>
           <th style="text-align: left; padding: 8px 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.12); font-size: 1.1em;">Mod</th>
-          <th style="text-align: center; padding: 8px 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.12); font-size: 1.1em;">Version</th>
-          <th style="text-align: center; padding: 8px 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.12); font-size: 1.1em;">Developer</th>
+          <th style="text-align: center; padding: 8px 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.12); font-size: 1.1em;">Versión</th>
+          <th style="text-align: center; padding: 8px 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.12); font-size: 1.1em;">Creador</th>
           <th style="text-align: center; padding: 8px 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.12); font-size: 1.1em;">Port</th>
         </tr>
         <tr>
@@ -97,85 +97,85 @@ A web port of the game that integrates a functional mod system with persistence,
 
 ---
 
-## 🛠 How to Create a Mod
+## 🛠 Cómo crear un mod
 
-Each mod lives in `mods/<ID>/` and needs:
+Cada mod vive en `mods/<ID>/` y necesita:
 
 ```
 mods/<ID>/
-├── Mod.js          # Mod config (name, version, developer, code)
-├── settings.js     # Configurable settings (toggle, range, select, color, etc.)
-├── code.js         # Mod logic (accesses the game loop via window.__phaserGame)
-├── need.js         # (optional) Dependencies on other mods
-├── icon.png        # (optional) Mod icon
-└── assets/         # (optional) Additional resources
+├── Mod.js          # Config del mod (nombre, versión, developer, código)
+├── settings.js     # Settings configurables (toggle, range, select, color, etc.)
+├── code.js         # Lógica del mod (accede al game loop via window.__phaserGame)
+├── need.js         # (opcional) Dependencias de otros mods
+├── icon.png        # (opcional) Icono del mod
+└── assets/         # (opcional) Recursos adicionales
 ```
 
-Available setting types: `toggle`, `range`, `text`, `number`, `select`, `color`, `gd-color`, `image-url`, `keybind`, `icon-grid`, `profile-import`.
+Tipos de settings disponibles: `toggle`, `range`, `text`, `number`, `select`, `color`, `gd-color`, `image-url`, `keybind`, `icon-grid`, `profile-import`.
 
-Check the **ExampleMod** as a template to get started.
+Mirá el **ExampleMod** como template para arrancar.
 
 ---
 
-## 🧩 Available APIs for Mods
+## 🧩 APIs disponibles para mods
 
-| API | Description |
+| API | Descripción |
 |-----|-------------|
-| `window.__game` | Central game API with events, accessors, and state detection |
+| `window.__game` | API central con eventos, accessors y detección de estado |
 | `window.__game.events` | EventEmitter: `on("game-ready")`, `on("player-spawn")`, `on("player-death")`, `on("menu")`, `on("gameplay")`, `on("pause")`, `on("resume")`, `on("level-complete")`, `on("update")` |
-| `window.__game.getScene()` | Get the active game scene |
-| `window.__game.getPlayer()` | Get the current player object (or null) |
-| `window.__game.isInMenu()` | `true` if currently in the main menu |
-| `window.__game.isPaused()` | `true` if the game is paused |
-| `window.__game.getSettings(id)` | Get settings values for any mod |
-| `window.__phaserGame` | Phaser.Game instance |
-| `window.__fpsLimit` | FPS control (enable/disable/setTarget) |
-| `window.__modOnSettings[]` | Settings callback array (push your handler) |
-| `window.__modCleanup` | Cleanup array (push your cleanup functions) |
-| `window.__getSettings(id)` | Global settings helper |
-| `localStorage` | Persistence |
+| `window.__game.getScene()` | Obtiene la escena activa del juego |
+| `window.__game.getPlayer()` | Obtiene el jugador actual (o null) |
+| `window.__game.isInMenu()` | `true` si está en el menú principal |
+| `window.__game.isPaused()` | `true` si el juego está pausado |
+| `window.__game.getSettings(id)` | Obtiene los settings de cualquier mod |
+| `window.__phaserGame` | Instancia de Phaser.Game |
+| `window.__fpsLimit` | Control de FPS (enable/disable/setTarget) |
+| `window.__modOnSettings[]` | Array de callbacks de settings |
+| `window.__modCleanup` | Array de cleanup (push tus funciones acá) |
+| `window.__getSettings(id)` | Helper global de settings |
+| `localStorage` | Persistencia |
 
 ---
 
-## 📦 Project Structure
+## 📦 Estructura del proyecto
 
 ```
 GeodeInGeometrydash.com/
 ├── index.html           # Entry point + mod system + game canvas
 ├── worker.js            # Service Worker (levels + music proxy)
 ├── favicon.ico
-├── assets/              # Phaser game engine, spritesheets, levels, music
+├── assets/              # Phaser game engine, spritesheets, niveles, música
 ├── GeodeAssets/         # Geode UI resources (spritesheets, fonts, sounds)
-├── Icons/               # 677 GD icons (cube, ship, ball)
-├── mods/                # Installed mods
+├── Icons/               # 677 iconos GD (cube, ship, ball)
+├── mods/                # Mods instalados
 ├── font/                # Pusab font
-├── READMEimg/           # README images
-└── *.py                 # Asset processing tools
+├── READMEimg/           # Imágenes para el README
+└── *.py                 # Herramientas de procesamiento de assets
 ```
 
 ---
 
-## 🌐 Infrastructure
+## 🌐 Infraestructura
 
 - **Phaser** (game engine)
-- **Cloudflare Workers** (level and song proxy):
+- **Cloudflare Workers** (proxy de niveles y canciones):
   - `getleveldata.lasokar.workers.dev`
   - `getlevelsong.lasokar.workers.dev`
   - `fetchsongid.lasokar.workers.dev`
-- **Service Worker** for request interception
-- **No build step** — pure static site
+- **Service Worker** para intercepción de requests
+- **Sin build step** — sitio estático puro
 
 ---
 
-## 📄 Licenses
+## 📄 Licencias
 
 - **Geode SDK**: BSL v1.0 (Business Source License)
-- **MoreIcons**: MIT License (by hiimjasmine00)
-- **Rest of the project**: contact the author
+- **MoreIcons**: MIT License (por hiimjasmine00)
+- **Resto del proyecto**: consultar con el autor
 
 ---
 
-## 👤 Author
+## 👤 Autor
 
 **[danteelgamer_YT](https://youtube.com/@danteelgameryt)**
 
@@ -185,10 +185,10 @@ GeodeInGeometrydash.com/
 
 ---
 
-## 🙏 Credits
+## 🙏 Créditos
 
-- **Geode Team**: HJfod, Alk1m123, Mat, ConfiG, Cvolton, Camila314, zmx, PoweredByPie, fig, FireCubez and [contributors](https://github.com/geode-sdk/geode/graphs/contributors)
-- **RobTop Games** for Geometry Dash
-- **hiimjasmine00** for the original MoreIcons mod
-- **syzzi** for the original Click Between Frames
-- **lasokar** for the Cloudflare Workers proxy
+- **Geode Team**: HJfod, Alk1m123, Mat, ConfiG, Cvolton, Camila314, zmx, PoweredByPie, fig, FireCubez y [contribuyentes](https://github.com/geode-sdk/geode/graphs/contributors)
+- **RobTop Games** por Geometry Dash
+- **hiimjasmine00** por el mod MoreIcons original
+- **syzzi** por Click Between Frames original
+- **lasokar** por los Cloudflare Workers de proxy

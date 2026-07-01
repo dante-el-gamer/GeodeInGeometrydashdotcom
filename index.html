@@ -480,6 +480,129 @@
             isActive: function() { return active; }
         };
     })();
+    // ── Game API ───────────────────────────────────────────
+    (function() {
+        function GameEvents() {
+            this._listeners = {};
+        }
+        GameEvents.prototype.on = function(event, fn) {
+            (this._listeners[event] = this._listeners[event] || []).push(fn);
+            return this;
+        };
+        GameEvents.prototype.off = function(event, fn) {
+            var list = this._listeners[event];
+            if (!list) return this;
+            if (!fn) delete this._listeners[event];
+            else for (var i = list.length; i--;) if (list[i] === fn) list.splice(i, 1);
+            return this;
+        };
+        GameEvents.prototype.emit = function(event) {
+            var list = this._listeners[event];
+            if (!list) return;
+            var args = Array.prototype.slice.call(arguments, 1);
+            for (var i = 0; i < list.length; i++) list[i].apply(null, args);
+        };
+
+        window.__game = {
+            events: new GameEvents(),
+            _ready: false,
+            _started: false,
+
+            getScene: function() {
+                var g = window.__phaserGame;
+                if (!g || !g.scene) return null;
+                var scenes = g.scene.scenes;
+                for (var i = 0; i < scenes.length; i++) {
+                    if (scenes[i]._player) return scenes[i];
+                }
+                for (var j = 0; j < scenes.length; j++) {
+                    if (scenes[j].scene && scenes[j].scene.isActive()) return scenes[j];
+                }
+                return null;
+            },
+
+            getPlayer: function() {
+                var s = this.getScene();
+                return s ? (s._player || null) : null;
+            },
+
+            isInMenu: function() {
+                var s = this.getScene();
+                return s ? !!s._menuActive : true;
+            },
+
+            isPaused: function() {
+                var s = this.getScene();
+                return s ? !!s._paused : false;
+            },
+
+            getSettings: function(modId) {
+                if (typeof modSettingsValues !== 'undefined' && modSettingsValues[modId]) {
+                    return modSettingsValues[modId];
+                }
+                return null;
+            },
+
+            _start: function() {
+                if (this._started) return;
+                this._started = true;
+                var g = window.__phaserGame;
+                if (!g) return;
+                var self = this;
+                try {
+                    g.events.on('poststep', function() { self._tick(); });
+                } catch(e) {
+                    function fallback() { requestAnimationFrame(fallback); self._tick(); }
+                    fallback();
+                }
+            },
+
+            _tick: function() {
+                this._detect();
+                this.events.emit('update');
+            },
+
+            _detect: function() {
+                var scene = this.getScene();
+
+                if (!this._ready) {
+                    this._ready = true;
+                    this.events.emit('game-ready');
+                }
+                if (scene !== this._lastScene) {
+                    this._lastScene = scene;
+                    this.events.emit('scene-change', scene);
+                }
+                if (!scene) return;
+
+                var menuActive = !!scene._menuActive;
+                if (menuActive !== this._lastMenuActive) {
+                    this._lastMenuActive = menuActive;
+                    this.events.emit(menuActive ? 'menu' : 'gameplay');
+                }
+
+                var player = scene._player || null;
+                if (player && player !== this._lastPlayer) {
+                    this._lastPlayer = player;
+                    this.events.emit('player-spawn', player);
+                }
+
+                var dead = player && player.p && player.p.isDead;
+                if (dead && !this._lastDead) { this._lastDead = true; this.events.emit('player-death'); }
+                if (!dead) this._lastDead = false;
+
+                var paused = !!scene._paused;
+                if (paused !== this._lastPaused) {
+                    this._lastPaused = paused;
+                    this.events.emit(paused ? 'pause' : 'resume');
+                }
+
+                var won = !!scene._levelWon;
+                if (won && !this._lastLevelComplete) { this._lastLevelComplete = true; this.events.emit('level-complete'); }
+                if (!won) this._lastLevelComplete = false;
+            }
+        };
+    })();
     // ──────────────────────────────────────────────────────────
 
     var params = new URLSearchParams(location.search);
@@ -624,8 +747,13 @@
         }
         if (!flushPendingMods()) {
             var pollGame = setInterval(function() {
-                if (flushPendingMods()) clearInterval(pollGame);
+                if (flushPendingMods()) {
+                    clearInterval(pollGame);
+                    if (window.__game) window.__game._start();
+                }
             }, 200);
+        } else {
+            if (window.__game) window.__game._start();
         }
     }
 
@@ -783,8 +911,15 @@
         script.onload = function() {
             loadCodeFiles(self, mod, function() {
                 if (window.__modCleanup) {
-                    activeMods[self] = { script: script, cleanup: window.__modCleanup };
-                    delete window.__modCleanup;
+                    var cleanups = window.__modCleanup;
+                    if (typeof cleanups === 'function') cleanups = [cleanups];
+                    activeMods[self] = {
+                        script: script,
+                        cleanup: function() {
+                            for (var ci = 0; ci < cleanups.length; ci++) cleanups[ci]();
+                        }
+                    };
+                    window.__modCleanup = [];
                 } else {
                     activeMods[self] = { script: script };
                 }
@@ -795,6 +930,13 @@
         document.body.appendChild(script);
         renderMods();
         if (currentDetailMod && currentDetailMod.id === id) renderDetail(currentDetailMod);
+    }
+
+    function __getSettings(modId) {
+        if (typeof modSettingsValues !== 'undefined' && modSettingsValues[modId]) {
+            return modSettingsValues[modId];
+        }
+        return null;
     }
 
     function openModDetail(mod) {
