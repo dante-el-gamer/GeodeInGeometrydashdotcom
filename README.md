@@ -43,57 +43,14 @@ A web port of the game that integrates a functional mod system with persistence,
 
 ## 🎮 Mods Included
 
-<div align="center">
-  <div style="position: relative; display: inline-block; max-width: 100%;">
-    <img src="READMEimg/MenuMods.png" width="800" style="display: block; max-width: 100%; height: auto;" alt="">
-    <div style="position: absolute; top: 16%; left: 6%; right: 6%; bottom: 7%; overflow: hidden; color: #d4d0e6; font-family: sans-serif; text-shadow: 2px 2px 4px #000;">
-      <table style="width: 100%; border-collapse: collapse; color: #d4d0e6;">
-        <tr>
-          <th style="text-align: left; padding: 8px 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.12); font-size: 1.1em;">Mod</th>
-          <th style="text-align: center; padding: 8px 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.12); font-size: 1.1em;">Version</th>
-          <th style="text-align: center; padding: 8px 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.12); font-size: 1.1em;">Developer</th>
-          <th style="text-align: center; padding: 8px 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.12); font-size: 1.1em;">Port</th>
-        </tr>
-        <tr>
-          <td style="padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.06);"><strong>ClickBetweenFrames</strong></td>
-          <td style="padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.06); text-align: center;">1.0.0</td>
-          <td style="padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.06); text-align: center;">syzzi</td>
-          <td style="padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.06); text-align: center;">danteelgamer_YT</td>
-        </tr>
-        <tr>
-          <td style="padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.06);"><strong>ExampleMod</strong></td>
-          <td style="padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.06); text-align: center;">1.0.0</td>
-          <td style="padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.06); text-align: center;">danteelgamer_YT</td>
-          <td style="padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.06); text-align: center;">—</td>
-        </tr>
-        <tr>
-          <td style="padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.06);"><strong>LockFPS</strong></td>
-          <td style="padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.06); text-align: center;">1.0.0</td>
-          <td style="padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.06); text-align: center;">danteelgamer_YT</td>
-          <td style="padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.06); text-align: center;">—</td>
-        </tr>
-        <tr>
-          <td style="padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.06);"><strong>MoreIcons</strong></td>
-          <td style="padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.06); text-align: center;">1.0.0</td>
-          <td style="padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.06); text-align: center;">hiimjasmine00</td>
-          <td style="padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.06); text-align: center;">danteelgamer_YT</td>
-        </tr>
-        <tr>
-          <td style="padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.06);"><strong>MenuMusic</strong></td>
-          <td style="padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.06); text-align: center;">1.0.0</td>
-          <td style="padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.06); text-align: center;">danteelgamer_YT</td>
-          <td style="padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.06); text-align: center;">—</td>
-        </tr>
-        <tr>
-          <td style="padding: 6px 8px; border-bottom: none;"><strong>ProfileInMainMenu</strong></td>
-          <td style="padding: 6px 8px; border-bottom: none; text-align: center;">—</td>
-          <td style="padding: 6px 8px; border-bottom: none; text-align: center;">—</td>
-          <td style="padding: 6px 8px; border-bottom: none; text-align: center;">—</td>
-        </tr>
-      </table>
-    </div>
-  </div>
-</div>
+| Mod | Version | Developer | Port |
+|-----|---------|-----------|------|
+| **ClickBetweenFrames** | 1.0.0 | syzzi | danteelgamer_YT |
+| **ExampleMod** | 1.0.0 | danteelgamer_YT | — |
+| **LockFPS** | 1.0.0 | danteelgamer_YT | — |
+| **MoreIcons** | 1.0.0 | hiimjasmine00 | danteelgamer_YT |
+| **MenuMusic** | 1.0.0 | danteelgamer_YT | — |
+| **ProfileInMainMenu** | — | — | — |
 
 ---
 
