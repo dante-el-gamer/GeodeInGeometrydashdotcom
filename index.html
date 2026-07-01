@@ -77,6 +77,29 @@
         .req-buttons img { cursor: pointer; height: 48px; transition: transform 0.1s; }
         .req-buttons img:hover { transform: scale(1.08); }
 
+        .warn-overlay-inner {
+            position: relative; z-index: 1;
+            width: 1349px;
+            aspect-ratio: 1349 / 1068;
+            max-width: 90vw;
+            max-height: 90vh;
+            flex-shrink: 0;
+            overflow: hidden;
+            background: url('GeodeAssets/resources/menu/example-warning.png') center/100% 100% no-repeat;
+        }
+        .warn-content {
+            position: absolute; z-index: 1;
+            inset: 15% 8% 16% 8%;
+            text-align: center;
+            display: flex; flex-direction: column;
+        }
+        .warn-buttons {
+            margin-top: auto;
+            display: flex; gap: 20px; justify-content: center;
+        }
+        .warn-buttons img { cursor: pointer; height: 48px; transition: transform 0.1s; }
+        .warn-buttons img:hover { transform: scale(1.08); }
+
         .mi-overlay-inner {
             position: relative; z-index: 1;
             width: 1349px;
@@ -378,6 +401,14 @@
                 </div>
             </div>
         </div>
+
+        <div class="mods-overlay" id="warn-overlay" style="display:none;position:fixed;inset:0;z-index:2100;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;font-family:'Pusab',sans-serif;letter-spacing:0.02em;text-shadow:2px 0 0 #000,-2px 0 0 #000,0 2px 0 #000,0 -2px 0 #000,2px 2px 0 #000,-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000">
+            <div class="warn-overlay-inner">
+                <div class="warn-content">
+                    <div class="warn-buttons" id="warn-buttons"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
 <script>
@@ -541,6 +572,21 @@
         [128,128,128],[102,3,62],[71,1,52],[210,255,50],[118,189,255]
     ];
 
+    function saveActiveMods() {
+        var ids = [];
+        for (var k in activeMods) ids.push(k);
+        try { localStorage.setItem('mod-active-list', JSON.stringify(ids)); } catch(e) {}
+    }
+
+    var pendingMods = [];
+
+    function flushPendingMods() {
+        if (!window.__phaserGame) return false;
+        for (var i = 0; i < pendingMods.length; i++) enableMod(pendingMods[i]);
+        pendingMods = [];
+        return true;
+    }
+
     async function loadMods() {
         var list = await fetch('mods/mod-list.json').then(function(r) { return r.json(); });
         for (var i = 0; i < list.length; i++) {
@@ -561,10 +607,25 @@
             }
         }
         renderMods();
+
+        // Restore previously active mods from localStorage
+        // (waits until the game is ready to avoid bugs)
+        var saved = [];
+        try { saved = JSON.parse(localStorage.getItem('mod-active-list') || '[]'); } catch(e) {}
+        var toEnable = {};
+        for (var si = 0; si < saved.length; si++) toEnable[saved[si]] = true;
+        // Also include defaultEnabled mods for first-time users
         for (var mi = 0; mi < mods.length; mi++) {
-            if (mods[mi].config.defaultEnabled && !activeMods[mods[mi].id]) {
-                enableMod(mods[mi].id);
-            }
+            if (mods[mi].config.defaultEnabled) toEnable[mods[mi].id] = true;
+        }
+        pendingMods = [];
+        for (var id in toEnable) {
+            if (!activeMods[id]) pendingMods.push(id);
+        }
+        if (!flushPendingMods()) {
+            var pollGame = setInterval(function() {
+                if (flushPendingMods()) clearInterval(pollGame);
+            }, 200);
         }
     }
 
@@ -637,6 +698,28 @@
         pendingNeededId = null;
     }
 
+    var warnPendingModId = null;
+
+    function showWarningOverlay(forModId) {
+        warnPendingModId = forModId;
+        var btns = document.getElementById('warn-buttons');
+        btns.innerHTML =
+            '<img id="warn-enable-btn" src="GeodeAssets/resources/menu/EnableRequiredMod.png">' +
+            '<img id="warn-cancel-btn" src="GeodeAssets/resources/menu/DoNotUseRquired Mod.png">';
+        document.getElementById('warn-enable-btn').addEventListener('click', function() {
+            if (warnPendingModId) enableMod(warnPendingModId);
+            saveActiveMods();
+            hideWarningOverlay();
+        });
+        document.getElementById('warn-cancel-btn').addEventListener('click', hideWarningOverlay);
+        document.getElementById('warn-overlay').style.display = 'flex';
+    }
+
+    function hideWarningOverlay() {
+        document.getElementById('warn-overlay').style.display = 'none';
+        warnPendingModId = null;
+    }
+
     function toggleMod(id) {
         var mod = mods.find(function(m) { return m.id === id; });
         if (!mod) return;
@@ -663,25 +746,51 @@
                     }
                 }
             }
+            // Show warning overlay before enabling ExampleMod
+            if (id === 'ExampleMod') {
+                showWarningOverlay(id);
+                renderMods();
+                if (currentDetailMod && currentDetailMod.id === id) renderDetail(currentDetailMod);
+                return;
+            }
             enableMod(id);
         }
+        saveActiveMods();
         renderMods();
         if (currentDetailMod && currentDetailMod.id === id) renderDetail(currentDetailMod);
     }
 
+    function loadCodeFiles(id, mod, onDone) {
+        var files = mod && mod.config && mod.config.codeFiles;
+        if (!files || !files.length) { onDone(); return; }
+        var loaded = 0;
+        for (var fi = 0; fi < files.length; fi++) {
+            var s = document.createElement('script');
+            s.src = 'mods/' + id + '/code/' + files[fi];
+            s.onload = function() {
+                loaded++;
+                if (loaded === files.length) onDone();
+            };
+            document.body.appendChild(s);
+        }
+    }
+
     function enableMod(id) {
+        var mod = mods.find(function(m) { return m.id === id; });
         var script = document.createElement('script');
         script.src = 'mods/' + id + '/code.js';
         var self = id;
         script.onload = function() {
-            if (window.__modCleanup) {
-                activeMods[self] = { script: script, cleanup: window.__modCleanup };
-                delete window.__modCleanup;
-            } else {
-                activeMods[self] = { script: script };
-            }
-            renderMods();
-            if (currentDetailMod && currentDetailMod.id === self) renderDetail(currentDetailMod);
+            loadCodeFiles(self, mod, function() {
+                if (window.__modCleanup) {
+                    activeMods[self] = { script: script, cleanup: window.__modCleanup };
+                    delete window.__modCleanup;
+                } else {
+                    activeMods[self] = { script: script };
+                }
+                renderMods();
+                if (currentDetailMod && currentDetailMod.id === self) renderDetail(currentDetailMod);
+            });
         };
         document.body.appendChild(script);
         renderMods();
